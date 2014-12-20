@@ -1,8 +1,17 @@
 # OUI (Organization Unique Identifiers)
 ## Usage
 
-    OUI.find 'AA-BB-CC'
-    OUI.find 'aa.bb.cc'
+    >OUI.find 'AA-BB-CC'
+    => nil
+    > OUI.find '00:0c:85'
+    => {
+                  :id => 3205,
+        :organization => "CISCO SYSTEMS, INC.",
+            :address1 => "170 W. TASMAN DRIVE",
+            :address2 => "M/S SJA-2",
+            :address3 => "SAN JOSE CA 95134-1706",
+             :country => "UNITED STATES"
+    }
 
 ## Installation
 ### Bundler Installation
