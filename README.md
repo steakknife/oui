@@ -1,4 +1,4 @@
-# OUI (Organization Unique Identifiers)
+# OUI (Organizationally Unique Identifiers)
 ## Usage
 
     >OUI.find 'AA-BB-CC'
