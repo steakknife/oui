@@ -1,8 +1,8 @@
 # OUI (Organization Unique Identifiers)
 ## Usage
 
-   OUI.find 'AA-BB-CC'
-   OUI.find 'aa.bb.cc'
+    OUI.find 'AA-BB-CC'
+    OUI.find 'aa.bb.cc'
 
 ## Installation
 ### Bundler Installation
