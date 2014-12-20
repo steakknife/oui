@@ -22,7 +22,7 @@ gem 'oui', git: 'https://github.com/steakknife/oui.git'
 
 ## Data
 
-Database sourced from the public IEEE list, but it can be rebuilt anytime by running `bin/build_db` or `OUI.build_db`
+Database sourced from the public IEEE list, but it can be rebuilt anytime by running `bin/update_db` or `OUI.update_db`
 
 ## License
 
