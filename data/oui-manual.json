@@ -3,6 +3,5 @@
 {"id": "0A:BB:CF", "organization": "Apple, Inc., Bluetooth PAN"},
 {"id": "6A:5B:35", "organization": "Apple, Inc., Bridge and bond devices (virtual)"},
 {"id": "CA:6F:1D", "organization": "Apple, Inc., iPhone USB"},
-{"id": "D2:00:1A", "organization": "Apple, Inc., Thunderbolt"},
-{"id": "E6:87:B1", "organization": "Apple, Inc., Apple Wireless Direct Link (AWDL)"}
+{"id": "D2:00:1A", "organization": "Apple, Inc., Thunderbolt"}
 ]
