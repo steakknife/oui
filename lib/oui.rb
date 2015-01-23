@@ -1,15 +1,43 @@
-require 'sequel'
-require 'json'
 require 'fileutils'
+require 'json'
 require 'open-uri'
+require 'sequel'
 
+# Organizationally Unique Identifier
 module OUI
   extend self
 
+  private
+
+  TABLE = :ouis
+  # import data/oui.txt instead of fetching remotely
+  IMPORT_LOCAL_TXT_FILE = false
+  # use in-memory instead of persistent file
+  IN_MEMORY_ONLY = false
+  LOCAL_DB = File.expand_path('../../db/oui.sqlite3', __FILE__)
+  LOCAL_MANUAL_FILE = File.expand_path('../../data/oui-manual.json', __FILE__)
+  if IMPORT_LOCAL_TXT_FILE
+    OUI_URL = File.join('data', 'oui.txt')
+  else
+    OUI_URL = 'http://standards.ieee.org/develop/regauth/oui/oui.txt'
+  end
+  FIRST_LINE_INDEX = 7
+  EXPECTED_DUPLICATES = [0x0001C8, 0x080030]
+  LINE_LENGTH = 22
+
+  public
+
+  # @param oui [String,Integer] hex or numeric OUI to find
+  # @return [Hash,nil]
   def find(oui)
-    ITEMS.where(id: oui_to_i(oui)).first
+    update_db unless table? && table.count > 0
+    table.where(id: oui_to_i(oui)).first
   end
 
+  # Converts an OUI string to an integer of equal value
+  # @param oui [String,Integer] MAC OUI in hexadecimal formats
+  #                             hhhh.hh, hh:hh:hh, hh-hh-hh or hhhhhh
+  # @return [Integer] numeric representation of oui
   def oui_to_i(oui)
     return oui if oui.is_a? Integer
     oui = oui.strip.gsub(/[:\- .]/, '')
@@ -17,41 +45,69 @@ module OUI
     oui.to_i(16)
   end
 
+  # Release backend resources
+  def close_db
+    @db = nil
+  end
+
+  # Update database from fetched URL
+  # @return [Integer] number of unique records loaded
   def update_db
-  ## Sequel
-    DB.drop_table(TABLE) rescue nil
+    ## Sequel
+    drop_table
     create_table
-    DB.transaction do
-      ITEMS.delete_sql
+    db.transaction do
+      table.delete_sql
       install_manual
       install_updates
     end
-
-  ## AR
-  # self.transaction do
-  #   self.delete_all
-  #   self.install_manual
-  #   self.install_updates
-  # end
+    ## AR
+    # self.transaction do
+    #   self.delete_all
+    #   self.install_manual
+    #   self.install_updates
+    # end
   end
 
+  
   private
 
-  TABLE = :ouis
-  TEMPORARY = false
-  if TEMPORARY
-    DB = Sequel.sqlite
-  else
-    LOCAL_DB = 'db/oui.sqlite3'
-    FileUtils.mkdir_p(File.dirname(LOCAL_DB))
-    DB = Sequel.sqlite(LOCAL_DB)
+  HEX_BEGINNING_REGEX = /\A[[:space:]]{2}[[:xdigit:]]{2}-/
+  ERASE_LINE = "\b" * LINE_LENGTH
+  BLANK_LINE = ' ' * LINE_LENGTH
+
+  def connect_file_db(f)
+    FileUtils.mkdir_p(File.dirname(f))
+    Sequel.sqlite(f)
   end
-  ITEMS = DB[TABLE]
-  OUI_URL = 'https://www.ieee.org/netstorage/standards/oui.txt'
-  LOCAL_MANUAL_FILE = 'data/oui-manual.json'
+
+  def connect_db
+    if IN_MEMORY_ONLY
+      Sequel.sqlite # in-memory sqlite database
+    else
+      $stderr.puts "Connecting to db file #{LOCAL_DB}"
+      connect_file_db LOCAL_DB
+    end
+  end
+
+  def db
+    @db ||= connect_db
+  end
+
+  def table?
+    db.tables.include? TABLE
+  end
+
+  def table
+    db[TABLE]
+  end
+
+  def drop_table
+    db.drop_table(TABLE) if table? 
+  end
 
   def create_table
-    DB.create_table TABLE do
+    db.create_table TABLE do
       primary_key :id
       String :organization, null: false
       String :address1
@@ -62,102 +118,74 @@ module OUI
     end
   end
 
+  # @param lines [Array<String>]
+  # @return [Array<Array<String>>]
   def parse_lines_into_groups(lines)
-    grps = []
-    cur = []
-    last_line = lines.count - 1
-    hex_beginning_consecutive = 0
-    lines.each_with_index do |line, line_no|
-      next unless line_no >= 14
-      hex_beginning = !!(line =~ /\A[[:space:]]{2}[[:xdigit:]]/)
-
-      if line_no == last_line
-        stripped = line.strip
-        cur << stripped unless stripped.empty?
-        unless cur.empty?
-          grps << cur
-          cur = []
-        end
-      elsif hex_beginning && hex_beginning_consecutive == 0
-        unless cur.empty?
-          grps << cur
-          cur = []
-        end
-        stripped = line.strip
-        cur << stripped unless stripped.empty?
-      else
-        stripped = line.strip
-        cur << stripped unless stripped.empty?
+    grps, curgrp = [], []
+    lines[FIRST_LINE_INDEX..-1].each do |line|
+      if !curgrp.empty? && line =~ HEX_BEGINNING_REGEX
+        grps << curgrp
+        curgrp = []
       end
-
-      if hex_beginning
-        hex_beginning_consecutive += 1
-      else
-        hex_beginning_consecutive = 0
-      end
+      line.strip!
+      next if line.empty?
+      curgrp << line
     end
-    grps
+    grps << curgrp # add last group and return
   end
 
+  # @param g [Array<String>]
+  def parse_org(g)
+    g[0].split("\t").last
+  end
+
+  # @param g [Array<String>]
+  def parse_id(g)
+    g[1].split(' ')[0].to_i(16)
+  end
+
+  MISSING_COUNTRIES = [
+    0x000052,
+    0x002142,
+    0x684CA8
+  ]
+
+  COUNTRY_OVERRIDES = {
+    0x000052 => 'UNITED STATES',
+    0x002142 => 'SERBIA',
+    0x684CA8 => 'CHINA'
+  }
+
+  def parse_address1(g)
+    g[2] if g.length >= 4
+  end
+
+  def parse_address2(g, id)
+    g[3] if g.length >= 5 || MISSING_COUNTRIES.include?(id)
+  end
+
+  def parse_address3(g)
+    g[4] if g.length == 6
+  end
+
+  # @param g [Array<String>]
+  # @param id [Integer]
+  def parse_country(g, id)
+    c = COUNTRY_OVERRIDES[id] || g[-1]
+    c if c !~ /\A\h/
+  end
+
+  # @param g [Array<String>]
   def create_from_line_group(g)
-    org = g[0].split("\t").last
-    id = g[1].split(' ')[0].to_i(16)
-    case g.length
-    when 2
-      # 0: hex
-      # 1: base16
-      create_unless_present(id: id, organization: org)
-
-    when 3
-      # 0: hex
-      # 1: base16
-      # 2: country
-      create_unless_present(id: id, organization: org, country: g[2])
-
-    when 4
-      # 0: hex
-      # 1: base16
-      # 2: street
-      # 3: city state
-      # 4: (omitted)
-      create_unless_present(id: id, organization: org, address1: g[2],
-                            address2: g[3], country: 'UNITED STATES')
-    when 5
-      # 0: hex
-      # 1: base16
-      # 2: street
-      # 3: city state
-      # 4: country
-      create_unless_present(id: id, organization: org, address1: g[2],
-                            address2: g[3], country: g[4])
-
-    when 6
-      # 0: hex
-      # 1: base16
-      # 2: address1
-      # 3: address2
-      # 4: address3
-      # 5: country
-      create_unless_present(id: id, organization: org, address1: g[2],
-                            address2: g[3], address3: g[4], country: g[5])
-
-    when 7
-      # 0: hex
-      # 1: base16
-      # 2: address1
-      # 3: address2
-      # 4: address3
-      # 5: address4
-      # 6: country
-      create_unless_present(id: id, organization: org, address1: g[2],
-                            address2: g[3], address3: g[4],
-                            address4: g[5], country: g[6])
-
-    else
-      raise ArgumentError, "Parse error lines: #{g.length}"
-    end
+    n = g.length
+    raise ArgumentError, "Parse error lines: #{n}" unless (2..6).include? n
+    id = parse_id(g)
+    create_unless_present(id: id, organization: parse_org(g),
+                          address1: parse_address1(g),
+                          address2: parse_address2(g, id),
+                          address3: parse_address3(g),
+                          country: parse_country(g, id))
   end
-
 
   def fetch
     $stderr.puts "Fetching #{OUI_URL}"
@@ -165,46 +193,46 @@ module OUI
   end
 
   def install_manual
-    return unless File.exist? LOCAL_MANUAL_FILE
     JSON.load(File.read(LOCAL_MANUAL_FILE)).each do |g|
       # convert keys to symbols
-      g = Hash[g.map { |k,v| [k.to_sym, v] } ]
+      g = g.map { |k, v| [k.to_sym, v] }
+      g = Hash[g]
       # convert OUI octets to integers
       g[:id] = oui_to_i(g[:id])
       create_unless_present(g)
     end
+  rescue Errno::ENOENT
   end
 
   def install_updates
-    lines = fetch.split("\r\n")
+    lines = fetch.split("\n").map { |x| x.sub(/\r$/, '') } 
     parse_lines_into_groups(lines).each_with_index do |group, idx|
       create_from_line_group(group)
-      $stderr.print ("\b" * 100) + "Created records #{idx}" if idx % 1000 == 0
+      $stderr.print "#{ERASE_LINE}Created records #{idx}" if idx % 1000 == 0
     end.count
-    $stderr.puts ("\b" * 100) + 'Done creating records'
+    $stderr.puts "#{ERASE_LINE}#{BLANK_LINE}"
   end
 
   # Expected duplicates are 00-01-C8 (2x) and 08-00-30 (3x)
   def expected_duplicate?(id)
-    id == 456 || id == 524336
+    EXPECTED_DUPLICATES.include? id
   end
 
-  def ids
-    @ids ||= {}
+  # Has a particular id been added yet?
+  def added
+    @added ||= {}
   end
 
   def create_unless_present(opts)
     id = opts[:id]
-    if ids[id]
+    if added[id]
       unless expected_duplicate? id
         $stderr.puts "OUI unexpected duplicate #{opts}"
       end
     else
-      OUI::ITEMS.insert(opts)
-  #    self.create! opts
-      ids[id] = true
+      table.insert(opts)
+      # self.create! opts
+      added[id] = true
     end
   end
-
-
 end
