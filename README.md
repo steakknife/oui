@@ -43,9 +43,13 @@ gem 'oui-offline', git: 'https://github.com/steakknife/oui.git'
     gem install *.gem
   
 
+## Lookup an OUI from CLI
+
+`oui lookup ABCDEF`
+
 ## Data
 
-Database sourced from the public IEEE list, but it can be rebuilt anytime by running `bin/update_db` or `OUI.update_db`
+Database sourced from the public IEEE list, but it can be rebuilt anytime by running `oui update` or `OUI.update_db`
 
 ## License
 
