@@ -85,7 +85,7 @@ module OUI
     if IN_MEMORY_ONLY
       Sequel.sqlite # in-memory sqlite database
     else
-      $stderr.puts "Connecting to db file #{LOCAL_DB}"
+      debug "Connecting to db file #{LOCAL_DB}"
       connect_file_db LOCAL_DB
     end
   end
@@ -188,7 +188,7 @@ module OUI
   end
 
   def fetch
-    $stderr.puts "Fetching #{OUI_URL}"
+    debug "Fetching #{OUI_URL}"
     open(OUI_URL).read
   end
 
@@ -208,9 +208,9 @@ module OUI
     lines = fetch.split("\n").map { |x| x.sub(/\r$/, '') } 
     parse_lines_into_groups(lines).each_with_index do |group, idx|
       create_from_line_group(group)
-      $stderr.print "#{ERASE_LINE}Created records #{idx}" if idx % 1000 == 0
+      debug "#{ERASE_LINE}Created records #{idx}" if idx % 1000 == 0
     end.count
-    $stderr.puts "#{ERASE_LINE}#{BLANK_LINE}"
+    debug "#{ERASE_LINE}#{BLANK_LINE}"
   end
 
   # Expected duplicates are 00-01-C8 (2x) and 08-00-30 (3x)
@@ -223,11 +223,15 @@ module OUI
     @added ||= {}
   end
 
+  def debug(*args)
+    $stderr.puts(*args) if $DEBUG
+  end
+
   def create_unless_present(opts)
     id = opts[:id]
     if added[id]
       unless expected_duplicate? id
-        $stderr.puts "OUI unexpected duplicate #{opts}"
+        debug "OUI unexpected duplicate #{opts}"
       end
     else
       table.insert(opts)
