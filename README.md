@@ -14,10 +14,24 @@
     }
 
 ## Installation
+### Gem (insecure installation)
+
+```shell
+[sudo] gem install oui-offline
+```
+### Gem (secure installation)
+
+```shell
+[sudo] gem cert --add <(curl -L https://gist.github.com/steakknife/5333881/raw/gem-public_cert.pem) # add my cert (do once)
+[sudo] gem install -P HighSecurity oui-offline
+```
+
+See also: [waxseal](https://github.com/steakknife/waxseal)
+
 ### Bundler Installation
 
 ```ruby
-gem 'oui', git: 'https://github.com/steakknife/oui.git'
+gem 'oui-offline', git: 'https://github.com/steakknife/oui.git'
 ```
 
 ### Manual Installation
