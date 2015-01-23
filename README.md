@@ -31,7 +31,7 @@ See also: [waxseal](https://github.com/steakknife/waxseal)
 ### Bundler Installation
 
 ```ruby
-gem 'oui-offline', git: 'https://github.com/steakknife/oui.git'
+gem 'oui-offline'
 ```
 
 ### Manual Installation
