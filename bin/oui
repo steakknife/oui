@@ -10,9 +10,6 @@ RUBY_OUTPUT = ARGV.delete '-v'
 JSON_OUTPUT = ARGV.delete '-j'
 YAML_OUTPUT = ARGV.delete '-y'
 
-
-
-
 def output(r)
   put(if YAML_OUTPUT
     YAML.dump r
@@ -36,7 +33,7 @@ when 'lookup'
     output(r || {})
   end
   exit 1 unless success
-  
+
 when 'update'
   OUI.update_db
   
@@ -49,7 +46,7 @@ else
              -y YAML verbose output
 
          oui update                       # update oui internal db from ieee.org
-         
+
 EOS
   exit 1
 end 
