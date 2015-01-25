@@ -36,7 +36,7 @@ when 'lookup'
 
 when 'update'
   OUI.update_db
-  
+
 else
   $stderr.puts <<-EOS
   Usage: oui lookup [options...] oui+     # get corp name, oui in 24-bit oui in hex format
