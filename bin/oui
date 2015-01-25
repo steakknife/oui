@@ -2,23 +2,54 @@
 lib_dir = File.expand_path('../../lib', __FILE__)
 $:.unshift lib_dir unless $:.include? lib_dir
 require 'oui'
+autoload :JSON, 'json'
+autoload :YAML, 'yaml'
 
-VERBOSE = ARGV.delete '-v'
+# TODO: OptParse || thor
+RUBY_OUTPUT = ARGV.delete '-v'
+JSON_OUTPUT = ARGV.delete '-j'
+YAML_OUTPUT = ARGV.delete '-y'
+
+
+
+
+def output(r)
+  put(if YAML_OUTPUT
+    YAML.dump r
+  elsif JSON_OUTPUT
+    JSON.dump r
+  elsif RUBY_OUTPUT
+    r
+  else
+    r[:organization]
+  end)
+end
+
 case ARGV.shift
+success = nil
 when 'lookup'
+  formats = [RUBY_OUTPUT, JSON_OUTPUT, YAML_OUTPUT].count { |x| x };
+  fail 'Only one format flag is allowed' if formats > 1
   ARGV.map do |mac|
-    if r = OUI.find(mac)
-      puts (VERBOSE) ? r : r[:organization]
-    end
+    r = OUI.find(mac)
+    success &= !!r
+    output(r || {})
   end
-
+  exit 1 unless success
+  
 when 'update'
   OUI.update_db
-
+  
 else
   $stderr.puts <<-EOS
-  Usage: oui lookup oui+     # get corp name, oui in 24-bit oui in hex format
-         oui update          # update oui db from ieee.org
+  Usage: oui lookup [options...] oui+     # get corp name, oui in 24-bit oui in hex format
+  
+             -j JSON verbose output
+             -r Ruby verbose output
+             -y YAML verbose output
+
+         oui update                       # update oui internal db from ieee.org
+         
 EOS
   exit 1
 end 
