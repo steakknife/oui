@@ -78,12 +78,20 @@ module OUI
 
   def connect_file_db(f)
     FileUtils.mkdir_p(File.dirname(f))
-    Sequel.sqlite(f)
+    if RUBY_PLATFORM == 'java'
+      Sequel.connect('jdbc:sqlite:'+f) 
+    else
+      Sequel.sqlite(f)
+    end
   end
 
   def connect_db
     if IN_MEMORY_ONLY
-      Sequel.sqlite # in-memory sqlite database
+      if RUBY_PLATFORM == 'java'
+        Sequel.connect('jdbc:sqlite::memory:')
+      else 
+        Sequel.sqlite # in-memory sqlite database
+      end
     else
       debug "Connecting to db file #{LOCAL_DB}"
       connect_file_db LOCAL_DB
