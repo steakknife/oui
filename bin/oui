@@ -11,7 +11,7 @@ JSON_OUTPUT = ARGV.delete '-j'
 YAML_OUTPUT = ARGV.delete '-y'
 
 def output(r)
-  put(if YAML_OUTPUT
+  puts(if YAML_OUTPUT
     YAML.dump r
   elsif JSON_OUTPUT
     JSON.dump r
