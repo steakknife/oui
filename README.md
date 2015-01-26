@@ -43,7 +43,7 @@ This is a Ruby library and CLI tool `oui`
 
 ```shell
 [sudo] gem cert --add <(curl -L https://gist.github.com/steakknife/5333881/raw/gem-public_cert.pem) # add my cert (do once)
-[sudo] gem install -P HighSecurity oui-offline
+[sudo] gem install -P MediumSecurity oui-offline
 ```
 
 See also: [waxseal](https://github.com/steakknife/waxseal)
