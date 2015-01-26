@@ -26,8 +26,9 @@ Gem::Specification::new do |s|
   s.homepage = 'https://github.com/steakknife/oui'
   s.post_install_message = 'Oui!'
 
-  s.add_dependency 'sequel', '>= 4', '< 5'
+  s.add_dependency 'sequel', '~> 4'
   s.extensions << 'ext/mkrf_conf.rb'
-
+  s.add_development_dependency 'rake', '~> 10'
+  s.add_development_dependency 'minitest', '~> 5'
 end
 .tap {|gem| pk = File.expand_path(File.join('~/.keys', 'gem-private_key.pem')); gem.signing_key = pk if File.exist? pk; gem.cert_chain = ['gem-public_cert.pem']} # pressed firmly by waxseal

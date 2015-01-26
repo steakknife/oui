@@ -4,6 +4,7 @@ require 'rubygems/dependency_installer'
 
 begin
   Gem::Command.build_args = ARGV
+  $stderr.puts "ARGV=#{ARGV}"
 rescue NoMethodError
 end 
 
@@ -11,7 +12,7 @@ inst = Gem::DependencyInstaller.new
 if RUBY_PLATFORM == 'java'
   inst.install 'jdbc-sqlite3'
 else
-  inst.install 'sqlite3', '>= 1.3', '< 2'
+  inst.install 'sqlite3', '~> 1'
 end
 
 # create dummy rakefile to indicate success
