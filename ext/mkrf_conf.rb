@@ -7,7 +7,7 @@ begin
 end 
 inst = Gem::DependencyInstaller.new
 begin
-  if RUBY_PLATFORM = "java"
+  if RUBY_PLATFORM == "java"
     inst.install 'jdbc-sqlite3'
   else
     inst.install 'sqlite3', '>= 1.3', '< 2'
