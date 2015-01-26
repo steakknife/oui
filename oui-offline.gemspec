@@ -1,6 +1,6 @@
 Gem::Specification::new do |s|
   s.name = 'oui-offline'
-  s.version = '1.2.1'
+  s.version = '1.2.2'
   s.platform = Gem::Platform::RUBY
   s.summary = 'Organizationally Unique Idenitfiers (OUI)'
   s.description = 'Organizationally Unique Idenitfiers (OUI) offline database'
