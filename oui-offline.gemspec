@@ -1,6 +1,6 @@
 Gem::Specification::new do |s|
   s.name = 'oui-offline'
-  s.version = '1.0.1'
+  s.version = '1.2.0'
   s.platform = Gem::Platform::RUBY
   s.summary = 'Organizationally Unique Idenitfiers (OUI)'
   s.description = 'Organizationally Unique Idenitfiers (OUI) offline database'
@@ -12,6 +12,7 @@ Gem::Specification::new do |s|
  'bin/oui',
  'data/oui-manual.json',
  'db/oui.sqlite3',
+ 'ext/mkrf_conf.rb',
  'lib/oui.rb',
  'oui-offline.gemspec',
 ]
