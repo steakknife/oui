@@ -1,17 +1,22 @@
 # OUI (Organizationally Unique Identifiers)
+
+The 24-bit prefix of MAC / EUI-\* addresses.
+
 ## Usage
 
-    >OUI.find 'AA-BB-CC'
-    => nil
-    > OUI.find '00:0c:85'
-    => {
-                  :id => 3205,
-        :organization => "CISCO SYSTEMS, INC.",
-            :address1 => "170 W. TASMAN DRIVE",
-            :address2 => "M/S SJA-2",
-            :address3 => "SAN JOSE CA 95134-1706",
-             :country => "UNITED STATES"
-    }
+```ruby
+> OUI.find 'AA-BB-CC'
+=> nil
+> OUI.find '00:0c:85'
+=> {
+              :id => 3205,
+    :organization => "CISCO SYSTEMS, INC.",
+        :address1 => "170 W. TASMAN DRIVE",
+        :address2 => "M/S SJA-2",
+        :address3 => "SAN JOSE CA 95134-1706",
+         :country => "UNITED STATES"
+}
+```
 
 ## Installation
 ### Gem (insecure installation)
@@ -47,9 +52,35 @@ gem 'oui-offline'
 
 `oui lookup ABCDEF`
 
-## Data
+## Data source
 
 Database sourced from the public IEEE list, but it can be rebuilt anytime by running `oui update` or `OUI.update_db`
+The few duplicates that are of multiple entities per OUI instead choose the first registration.
+
+## Unregistered OUIs
+
+Place custom/unregistered OUIs in `data/oui-manual.json` and re-run `oui update` or `OUI.update_db`.  Feel free to submit a PR to update these permanently.
+
+## Return format
+
+The `id` column is a stable, reversible conversion of the OUI as follows: the hexadecimal value of the OUI) to unsigned integer in network order (id).
+
+- Use `OUI.oui_to_i('aa-bb-cc')` to obtain an `id` from an OUI
+- Use `OUI.to_s(12345)` to do the inverse, obtain an OUI from an `id`
+
+## Supported Ruby Engines
+
+- JRuby
+- Ruby 1.9.3+ (until February 2015), 2.*
+
+## Tested Ruby Engines
+
+- JRuby 1.7.*
+- Ruby (MRI) 2.2.*
+
+## Thanks
+
+[Your name here]
 
 ## License
 

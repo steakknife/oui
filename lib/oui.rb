@@ -11,7 +11,7 @@ module OUI
 
   TABLE = :ouis
   # import data/oui.txt instead of fetching remotely
-  IMPORT_LOCAL_TXT_FILE = false
+  IMPORT_LOCAL_TXT_FILE = true
   # use in-memory instead of persistent file
   IN_MEMORY_ONLY = false
   LOCAL_DB = File.expand_path('../../db/oui.sqlite3', __FILE__)
@@ -31,18 +31,29 @@ module OUI
   # @return [Hash,nil]
   def find(oui)
     update_db unless table? && table.count > 0
-    table.where(id: oui_to_i(oui)).first
+    table.where(id: OUI.to_i(oui)).first
   end
 
   # Converts an OUI string to an integer of equal value
   # @param oui [String,Integer] MAC OUI in hexadecimal formats
   #                             hhhh.hh, hh:hh:hh, hh-hh-hh or hhhhhh
   # @return [Integer] numeric representation of oui
-  def oui_to_i(oui)
+  def to_i(oui)
     return oui if oui.is_a? Integer
     oui = oui.strip.gsub(/[:\- .]/, '')
     return unless oui =~ /[[:xdigit:]]{6}/
     oui.to_i(16)
+  end
+
+  # Convert an id to OUI
+  # @param oui [String,nil] string to place between pairs of hex digits, nil for none
+  # @return [String] hexadecimal format of id
+  def to_s(id, sep = '-')
+    return id if id.is_a? String
+    unless id >= 0x000000 && id <= 0xFFFFFF
+      raise ArgumentError, "#{id} is not a valid 24-bit OUI"
+    end
+    format('%06x', id).scan(/../).join(sep)
   end
 
   # Release backend resources
@@ -54,6 +65,7 @@ module OUI
   # @return [Integer] number of unique records loaded
   def update_db
     ## Sequel
+    close_db
     drop_table
     create_table
     db.transaction do
@@ -206,7 +218,7 @@ module OUI
       g = g.map { |k, v| [k.to_sym, v] }
       g = Hash[g]
       # convert OUI octets to integers
-      g[:id] = oui_to_i(g[:id])
+      g[:id] = OUI.to_i(g[:id])
       create_unless_present(g)
     end
   rescue Errno::ENOENT

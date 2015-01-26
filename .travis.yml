@@ -1,0 +1,10 @@
+matrix:
+  fast_finish: true
+rvm: 
+- 2.2.0
+- 2.1.5
+- 2.0.0
+- 1.9.3
+- ruby-head
+- jruby-19mode
+- rbx
