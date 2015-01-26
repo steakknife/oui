@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/steakknife/oui.svg)](https://travis-ci.org/steakknife/oui)
 # OUI (Organizationally Unique Identifiers)
 
 The 24-bit prefix of MAC / EUI-\* addresses.
