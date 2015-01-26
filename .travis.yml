@@ -1,3 +1,6 @@
+before_install:
+- gem build *.gemspec
+- gem install *.gem
 matrix:
   fast_finish: true
 rvm: 
