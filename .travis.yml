@@ -1,8 +1,9 @@
-before_install:
-- gem build *.gemspec
-- gem install *.gem
-matrix:
-  fast_finish: true
+language: ruby
+
+os:
+- linux
+- osx
+
 rvm: 
 - 2.2.0
 - 2.1.5
@@ -11,3 +12,6 @@ rvm:
 - ruby-head
 - jruby-19mode
 - rbx
+
+matrix:
+  fast_finish: true

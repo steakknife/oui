@@ -1,12 +1,11 @@
 require 'rubygems'
 require 'rubygems/command'
-require 'rubygems/dependency_installer' 
+require 'rubygems/dependency_installer'
 
 begin
   Gem::Command.build_args = ARGV
-  $stderr.puts "ARGV=#{ARGV}"
 rescue NoMethodError
-end 
+end
 
 inst = Gem::DependencyInstaller.new
 if RUBY_PLATFORM == 'java'
@@ -19,4 +18,3 @@ end
 File.open(File.join(File.dirname(__FILE__), 'Rakefile'), 'w') do |f|
   f.puts('task :default')
 end
-$stderr.puts 'Finished installing oui driver for sequel'
