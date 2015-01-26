@@ -2,6 +2,8 @@
 
 The 24-bit prefix of MAC / EUI-\* addresses.
 
+This is a Ruby library and CLI tool `oui`
+
 ## Usage
 
 ```ruby
@@ -16,6 +18,18 @@ The 24-bit prefix of MAC / EUI-\* addresses.
         :address3 => "SAN JOSE CA 95134-1706",
          :country => "UNITED STATES"
 }
+```
+
+## CLI usage
+
+```text
+  Usage: oui lookup [options...] oui+     # get corp name, oui in 24-bit oui in hex format
+
+             -j JSON verbose output
+             -r Ruby verbose output
+             -y YAML verbose output
+
+         oui update                       # update oui internal db from ieee.org
 ```
 
 ## Installation

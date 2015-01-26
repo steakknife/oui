@@ -23,8 +23,8 @@ def output(r)
 end
 
 case ARGV.shift
-success = nil
 when 'lookup'
+  success = nil
   formats = [RUBY_OUTPUT, JSON_OUTPUT, YAML_OUTPUT].count { |x| x };
   fail 'Only one format flag is allowed' if formats > 1
   ARGV.map do |mac|
