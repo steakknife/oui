@@ -11,7 +11,7 @@ module OUI
 
   TABLE = :ouis
   # import data/oui.txt instead of fetching remotely
-  IMPORT_LOCAL_TXT_FILE = true
+  IMPORT_LOCAL_TXT_FILE = false
   # use in-memory instead of persistent file
   IN_MEMORY_ONLY = false
   LOCAL_DB = File.expand_path('../../db/oui.sqlite3', __FILE__)
