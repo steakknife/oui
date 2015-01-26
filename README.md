@@ -78,6 +78,17 @@ Place custom/unregistered OUIs in `data/oui-manual.json` and re-run `oui update`
 
 ## Return format
 
+`OUI.find('00-00-00')` returns a hash like this:
+
+```ruby
+{:id            => 0,
+ :organization  => "XEROX CORPORATION",
+ :address1      => "M/S 105-50C",
+ :address2      => "800 PHILLIPS ROAD",
+ :address3      => "WEBSTER NY 14580",
+ :country       => "UNITED STATES"}
+
+
 The `id` column is a stable, reversible conversion of the OUI as follows: the hexadecimal value of the OUI) to unsigned integer in network order (id).
 
 - Use `OUI.oui_to_i('aa-bb-cc')` to obtain an `id` from an OUI
