@@ -63,7 +63,7 @@ module OUI
 
   # Release backend resources
   def close_db
-    semaphore.sychronize do
+    semaphore.synchronize do
       @db = nil
     end
   end
