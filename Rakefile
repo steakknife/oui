@@ -55,37 +55,29 @@ task :version do
   puts gemspec_object.version
 end
 
-desc 'bump release'
-task :bump do
-  old_version = version
-  x, y, z = old_version.split('.')
-  z += 1
-  new_version = [x, y, z].join('.')
+def bump(idx)
+  old_version = version.to_s
+  v = old_version.split('.').map(&:to_i)
+  v[idx] += 1
+  new_version = v.map(&:to_s).join('.')
   assert_git_clean
   sh "sed -i '' -e 's/#{old_version}/#{new_version}/' '#{@gemspec_file}'"
   sh "git add #{@gemspec_file} && git commit -sS -am 'bump to #{new_version}'"
+end
+
+desc 'bump release'
+task :bump do
+  bump 2
 end
 
 desc 'bump minor'
 task 'bump:minor' do
-  old_version = version
-  x, y, z = old_version.split('.')
-  u += 1
-  new_version = [x, y, z].join('.')
-  assert_git_clean
-  sh "sed -i '' -e 's/#{old_version}/#{new_version}/' '#{@gemspec_file}'"
-  sh "git add #{@gemspec_file} && git commit -sS -am 'bump to #{new_version}'"
+  bump 1
 end
 
 desc 'bump major'
 task 'bump:major' do
-  old_version = version
-  x, y, z = old_version.split('.')
-  u += 1
-  new_version = [x, y, z].join('.')
-  assert_git_clean
-  sh "sed -i '' -e 's/#{old_version}/#{new_version}/' '#{@gemspec_file}'"
-  sh "git add #{@gemspec_file} && git commit -sS -am 'bump to #{new_version}'"
+  bump 0
 end
 
 desc 'release'
