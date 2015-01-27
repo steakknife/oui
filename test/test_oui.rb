@@ -7,8 +7,19 @@ class TestOUI < Minitest::Test
   DB_FILE = 'db/oui.sqlite3'
 
   def setup
-    @xerox = {:id=>0, :organization=>"XEROX CORPORATION", :address1=>"M/S 105-50C", :address2=>"800 PHILLIPS ROAD", :address3=>"WEBSTER NY 14580", :country=>"UNITED STATES"}
-    @dell = {:id=>54032, :organization=>"Dell, Inc., for Dell Compellent Storage products", :address1=>nil, :address2=>nil, :address3=>nil, :country=>nil}
+    @xerox = {id: 0,
+    organization: 'XEROX CORPORATION',
+        address1: 'M/S 105-50C',
+        address2: '800 PHILLIPS ROAD',
+        address3: 'WEBSTER NY 14580',
+         country: 'UNITED STATES'}
+
+    @dell = {id: 54032,
+   organization: 'Dell, Inc., for Dell Compellent Storage products',
+       address1: nil,
+       address2: nil,
+       address3: nil,
+        country: nil}
   end
 
   def test_update_db
