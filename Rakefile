@@ -1,6 +1,7 @@
 def root
-  File.expand_path(File.join('..'), __FILE__)
+  @root ||= File.expand_path(File.join('..'), __FILE__)
 end
+
 def bundle_sh(*args)
   if File.directory?(File.join(root, 'vendor', 'bundle'))
     if args.length == 1

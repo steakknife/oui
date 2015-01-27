@@ -1,6 +1,8 @@
-require 'fileutils'
-require 'json'
+autoload :FileUtils, 'fileutils'
+autoload :JSON, 'json'
+require 'monitor'
 require 'open-uri'
+
 require 'sequel'
 
 # Organizationally Unique Identifier
@@ -14,10 +16,11 @@ module OUI
   IMPORT_LOCAL_TXT_FILE = false
   # use in-memory instead of persistent file
   IN_MEMORY_ONLY = false
-  LOCAL_DB = File.expand_path('../../db/oui.sqlite3', __FILE__)
-  LOCAL_MANUAL_FILE = File.expand_path('../../data/oui-manual.json', __FILE__)
+  ROOT = File.expand_path(File.join('..', '..'), __FILE__)
+  LOCAL_DB = File.join(ROOT, 'db', 'oui.sqlite3')
+  LOCAL_MANUAL_FILE = File.join(ROOT, 'data', 'oui-manual.json')
   if IMPORT_LOCAL_TXT_FILE
-    OUI_URL = File.join('data', 'oui.txt')
+    OUI_URL = File.join(ROOT, 'data', 'oui.txt')
   else
     OUI_URL = 'http://standards.ieee.org/develop/regauth/oui/oui.txt'
   end
@@ -30,8 +33,10 @@ module OUI
   # @param oui [String,Integer] hex or numeric OUI to find
   # @return [Hash,nil]
   def find(oui)
-    update_db unless table? && table.count > 0
-    table.where(id: OUI.to_i(oui)).first
+    semaphore.synchronize do
+      update_db unless table? && table.count > 0
+      table.where(id: self.to_i(oui)).first
+    end
   end
 
   # Converts an OUI string to an integer of equal value
@@ -58,27 +63,32 @@ module OUI
 
   # Release backend resources
   def close_db
-    @db = nil
+    semaphore.sychronize do
+      @db = nil
+    end
   end
+
 
   # Update database from fetched URL
   # @return [Integer] number of unique records loaded
   def update_db
-    ## Sequel
-    close_db
-    drop_table
-    create_table
-    db.transaction do
-      table.delete_sql
-      install_manual
-      install_updates
+    semaphore.synchronize do
+      ## Sequel
+      close_db
+      drop_table
+      create_table
+      db.transaction do
+        table.delete_sql
+        install_manual
+        install_updates
+      end
+      ## AR
+      # self.transaction do
+      #   self.delete_all
+      #   self.install_manual
+      #   self.install_updates
+      # end
     end
-    ## AR
-    # self.transaction do
-    #   self.delete_all
-    #   self.install_manual
-    #   self.install_updates
-    # end
   end
 
   
@@ -218,7 +228,7 @@ module OUI
       g = g.map { |k, v| [k.to_sym, v] }
       g = Hash[g]
       # convert OUI octets to integers
-      g[:id] = OUI.to_i(g[:id])
+      g[:id] = self.to_i(g[:id])
       create_unless_present(g)
     end
   rescue Errno::ENOENT
@@ -245,6 +255,10 @@ module OUI
 
   def debug(*args)
     $stderr.puts(*args) if $DEBUG
+  end
+
+  def semaphore
+    @@semaphore ||= Monitor.new
   end
 
   def create_unless_present(opts)
