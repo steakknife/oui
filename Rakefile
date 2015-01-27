@@ -18,4 +18,82 @@ task :test do
   bundle_sh "ruby -Ilib:test #{File.join(root, 'test', 'test_oui.rb')}"
 end
 
+@gemspec_file = Dir['*.gemspec'].first
+
+def gemspec
+  @gemspec ||= Gem::Specification::load(@gemspec_file)
+end
+
+def version
+  gemspec.version
+end
+
+def name
+  gemspec.name
+end
+
+def platform
+  gemspec.platform
+end
+
+def gem_file(platform)
+  r = "#{name}-#{version}"
+  r += "-#{platform}" if platform != 'ruby'
+  r + '.gem'
+end
+
+def git_dirty?
+  `git diff --shortstat 2>/dev/null`.chop != ''
+end
+
+def assert_git_clean
+  raise 'Git must be clean before continuing' if git_dirty?
+end
+
+desc 'get version'
+task :version do
+  puts gemspec_object.version
+end
+
+desc 'bump release'
+task :bump do
+  old_version = version
+  x, y, z = old_version.split('.')
+  z += 1
+  new_version = [x, y, z].join('.')
+  assert_git_clean
+  sh "sed -i '' -e 's/#{old_version}/#{new_version}/' '#{@gemspec_file}'"
+  sh "git add #{@gemspec_file} && git commit -sS -am 'bump to #{new_version}'"
+end
+
+desc 'bump minor'
+task 'bump:minor' do
+  old_version = version
+  x, y, z = old_version.split('.')
+  u += 1
+  new_version = [x, y, z].join('.')
+  assert_git_clean
+  sh "sed -i '' -e 's/#{old_version}/#{new_version}/' '#{@gemspec_file}'"
+  sh "git add #{@gemspec_file} && git commit -sS -am 'bump to #{new_version}'"
+end
+
+desc 'bump major'
+task 'bump:major' do
+  old_version = version
+  x, y, z = old_version.split('.')
+  u += 1
+  new_version = [x, y, z].join('.')
+  assert_git_clean
+  sh "sed -i '' -e 's/#{old_version}/#{new_version}/' '#{@gemspec_file}'"
+  sh "git add #{@gemspec_file} && git commit -sS -am 'bump to #{new_version}'"
+end
+
+desc 'release'
+task :release => :test do
+  assert_git_clean
+  sh "git tag -s #{version} -m #{version} && git push --tags"
+  sh "chruby ruby && gem build #{@gemspec_file} && gem push #{gem_file('ruby')}"
+  sh "chruby jruby && gem build #{@gemspec_file} && gem push #{gem_file('java')}"
+end
+
 task :default => :test
