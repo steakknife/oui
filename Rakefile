@@ -92,8 +92,8 @@ desc 'release'
 task :release => :test do
   assert_git_clean
   sh "git tag -s #{version} -m #{version} && git push --tags"
-  sh "chruby-exec ruby -- gem build #{@gemspec_file}"
-  sh "chruby-exec jruby -- gem build #{@gemspec_file}"
+  sh "TMP_RUBIES=($RUBIES_ROOT/*); TMP_RUBIES=\"RUBIES=(${TMP_RUBIES[@]})\"; chruby-exec \"$TMP_RUBIES\" ruby-2.2.0 -- gem build #{@gemspec_file}"
+  sh "TMP_RUBIES=($RUBIES_ROOT/*); TMP_RUBIES=\"RUBIES=(${TMP_RUBIES[@]})\"; chruby-exec \"$TMP_RUBIES\" jruby -- gem build #{@gemspec_file}"
   sh "gem push #{gem_file('ruby')}"
   sh "gem push #{gem_file('java')}"
 end
