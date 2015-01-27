@@ -11,31 +11,92 @@ module OUI
 
   private
 
+  DEBUGGING_DEFAULT = false
   TABLE = :ouis
   # import data/oui.txt instead of fetching remotely
-  IMPORT_LOCAL_TXT_FILE = false
+  IMPORT_LOCAL_TXT_FILE_DEFAULT = false
   # use in-memory instead of persistent file
-  IN_MEMORY_ONLY = false
+  IN_MEMORY_ONLY_DEFAULT = false
   ROOT = File.expand_path(File.join('..', '..'), __FILE__)
-  LOCAL_DB = File.join(ROOT, 'db', 'oui.sqlite3')
+  LOCAL_DB_DEFAULT = File.join(ROOT, 'db', 'oui.sqlite3')
+  LOCAL_TXT_FILE = File.join(ROOT, 'data', 'oui.txt')
+  REMOTE_TXT_URI = 'http://standards.ieee.org/develop/regauth/oui/oui.txt'
   LOCAL_MANUAL_FILE = File.join(ROOT, 'data', 'oui-manual.json')
-  if IMPORT_LOCAL_TXT_FILE
-    OUI_URL = File.join(ROOT, 'data', 'oui.txt')
-  else
-    OUI_URL = 'http://standards.ieee.org/develop/regauth/oui/oui.txt'
-  end
   FIRST_LINE_INDEX = 7
   EXPECTED_DUPLICATES = [0x0001C8, 0x080030]
   LINE_LENGTH = 22
+  HEX_BEGINNING_REGEX = /\A[[:space:]]{2}[[:xdigit:]]{2}-/
+  ERASE_LINE = "\b" * LINE_LENGTH
+  BLANK_LINE = ' ' * LINE_LENGTH
+
+  MISSING_COUNTRIES = [
+    0x000052,
+    0x002142,
+    0x684CA8
+  ]
+
+  COUNTRY_OVERRIDES = {
+    0x000052 => 'UNITED STATES',
+    0x002142 => 'SERBIA',
+    0x684CA8 => 'CHINA'
+  }
 
   public
+
+  @@local_db = LOCAL_DB_DEFAULT
+
+  def local_db
+    @@local_db
+  end
+
+  def local_db=(v)
+    @@local_db = v || LOCAL_DB_DEFAULT
+  end
+
+
+  @@debugging = DEBUGGING_DEFAULT
+
+  def debugging
+    @@debugging
+  end
+
+  def debugging=(v)
+    @@debugging = (v.nil?) ? DEBUGGING_DEFAULT : v
+  end
+
+
+  @@import_local_txt_file = IMPORT_LOCAL_TXT_FILE_DEFAULT
+
+  def import_local_txt_file
+    @@import_local_txt_file
+  end
+
+  def import_local_txt_file=(v)
+    @@import_local_txt_file = (v.nil?) ? IMPORT_LOCAL_TXT_FILE_DEFAULT : v
+  end
+
+
+  @@in_memory_only = IN_MEMORY_ONLY_DEFAULT
+
+  def in_memory_only
+    @@in_memory_only
+  end
+
+  def in_memory_only=(v)
+    if v != @@in_memory_only
+      @@in_memory_only = (v.nil?) ? IN_MEMORY_ONLY_DEFAULT : v
+      close_db
+    end
+  end
 
   # @param oui [String,Integer] hex or numeric OUI to find
   # @return [Hash,nil]
   def find(oui)
     semaphore.synchronize do
       update_db unless table? && table.count > 0
-      table.where(id: self.to_i(oui)).first
+      r = table.where(id: self.to_i(oui)).first
+      r.delete :create_table if r # not sure why this is here, but nuking it
+      r
     end
   end
 
@@ -46,8 +107,9 @@ module OUI
   def to_i(oui)
     return oui if oui.is_a? Integer
     oui = oui.strip.gsub(/[:\- .]/, '')
-    return unless oui =~ /[[:xdigit:]]{6}/
-    oui.to_i(16)
+    if oui =~ /([[:xdigit:]]{6})/
+      $1.to_i(16)
+    end
   end
 
   # Convert an id to OUI
@@ -61,67 +123,98 @@ module OUI
     format('%06x', id).scan(/../).join(sep)
   end
 
+  @@db = nil
   # Release backend resources
   def close_db
     semaphore.synchronize do
-      @db = nil
+      debug 'Closing database'
+      if @@db 
+        @@db.disconnect
+        @@db = nil
+      end
     end
   end
 
+  def clear_table
+    debug 'clear_table'
+    table.delete_sql
+  end
 
   # Update database from fetched URL
+  # @param [Boolean] whether to connect to the network or not
   # @return [Integer] number of unique records loaded
-  def update_db
+  def update_db(local = nil, db_file = nil)
     semaphore.synchronize do
-      ## Sequel
+      debug "update_db(local = #{local}, db_file = #{db_file})"
       close_db
+      old_import_local_txt_file = self.import_local_txt_file
+      self.import_local_txt_file = local
+      old_local_db = self.local_db
+      self.local_db = db_file
+      ## Sequel
+      debug '--- close db ---'
+      debug '--- close db ---'
+      debug '--- drop table ---'
       drop_table
+#      debug '--- drop table ---'
+#      debug '--- create table ---'
       create_table
+#      debug '--- create table ---'
       db.transaction do
-        table.delete_sql
+        debug '--- clear table ---'
+        clear_table
+        debug '--- clear table ---'
+        debug '--- install manual ---'
         install_manual
+        debug '--- install manual ---'
+        debug '--- install updates ---'
         install_updates
+        debug '--- install updates ---'
       end
+      debug '--- close db ---'
+      close_db
+      debug '--- close db ---'
+
+      self.local_db = old_local_db
+      self.import_local_txt_file = old_import_local_txt_file
       ## AR
       # self.transaction do
       #   self.delete_all
       #   self.install_manual
       #   self.install_updates
       # end
+      debug "update_db(local = #{local}, db_file = #{db_file}) finish"
     end
   end
-
   
   private
-
-  HEX_BEGINNING_REGEX = /\A[[:space:]]{2}[[:xdigit:]]{2}-/
-  ERASE_LINE = "\b" * LINE_LENGTH
-  BLANK_LINE = ' ' * LINE_LENGTH
 
   def connect_file_db(f)
     FileUtils.mkdir_p(File.dirname(f))
     if RUBY_PLATFORM == 'java'
-      Sequel.connect('jdbc:sqlite:'+f) 
+      u = 'jdbc:sqlite:'+f
     else
-      Sequel.sqlite(f)
+      u = 'sqlite:'+f
     end
+    debug "Connecting to db file #{u}"
+    Sequel.connect(u)
   end
 
   def connect_db
-    if IN_MEMORY_ONLY
+    if in_memory_only
+      debug 'Connecting to in-memory database'
       if RUBY_PLATFORM == 'java'
         Sequel.connect('jdbc:sqlite::memory:')
       else 
         Sequel.sqlite # in-memory sqlite database
       end
     else
-      debug "Connecting to db file #{LOCAL_DB}"
-      connect_file_db LOCAL_DB
+      connect_file_db local_db
     end
   end
 
   def db
-    @db ||= connect_db
+    @@db ||= connect_db
   end
 
   def table?
@@ -133,10 +226,12 @@ module OUI
   end
 
   def drop_table
+    debug 'drop_table'
     db.drop_table(TABLE) if table? 
   end
 
   def create_table
+#    debug 'create_table'
     db.create_table TABLE do
       primary_key :id
       String :organization, null: false
@@ -174,18 +269,6 @@ module OUI
     g[1].split(' ')[0].to_i(16)
   end
 
-  MISSING_COUNTRIES = [
-    0x000052,
-    0x002142,
-    0x684CA8
-  ]
-
-  COUNTRY_OVERRIDES = {
-    0x000052 => 'UNITED STATES',
-    0x002142 => 'SERBIA',
-    0x684CA8 => 'CHINA'
-  }
-
   def parse_address1(g)
     g[2] if g.length >= 4
   end
@@ -218,11 +301,13 @@ module OUI
   end
 
   def fetch
-    debug "Fetching #{OUI_URL}"
-    open(OUI_URL).read
+    uri = oui_uri
+    $stderr.puts "Fetching #{uri}"
+    open(uri).read
   end
 
   def install_manual
+    debug 'install_manual'
     JSON.load(File.read(LOCAL_MANUAL_FILE)).each do |g|
       # convert keys to symbols
       g = g.map { |k, v| [k.to_sym, v] }
@@ -235,6 +320,7 @@ module OUI
   end
 
   def install_updates
+    debug 'install_updates'
     lines = fetch.split("\n").map { |x| x.sub(/\r$/, '') } 
     parse_lines_into_groups(lines).each_with_index do |group, idx|
       create_from_line_group(group)
@@ -250,11 +336,19 @@ module OUI
 
   # Has a particular id been added yet?
   def added
-    @added ||= {}
+    @@added ||= {}
+  end
+
+  def debug?
+    $DEBUG || debugging || ENV['DEBUG_OUI']
   end
 
   def debug(*args)
-    $stderr.puts(*args) if $DEBUG
+    $stderr.puts(*args) if debug?
+  end
+
+  def debug_print(*args)
+    $stderr.print(*args) if debug?
   end
 
   def semaphore
@@ -271,6 +365,16 @@ module OUI
       table.insert(opts)
       # self.create! opts
       added[id] = true
+    end
+  end
+
+  def oui_uri
+    if import_local_txt_file
+      debug 'oui_uri = local'
+      LOCAL_TXT_FILE
+    else
+      debug 'oui_uri = remote'
+      REMOTE_TXT_URI
     end
   end
 end
