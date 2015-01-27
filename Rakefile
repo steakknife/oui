@@ -92,8 +92,8 @@ desc 'release'
 task :release => :test do
   assert_git_clean
   sh "git tag -s #{version} -m #{version} && git push --tags"
-  sh "chruby-exec ruby gem build #{@gemspec_file} && gem push #{gem_file('ruby')}"
-  sh "chruby-exec jruby gem build #{@gemspec_file} && gem push #{gem_file('java')}"
+  sh "chruby-exec ruby -- gem build #{@gemspec_file} && gem push #{gem_file('ruby')}"
+  sh "chruby-exec jruby -- gem build #{@gemspec_file} && gem push #{gem_file('java')}"
 end
 
 task :default => :test
