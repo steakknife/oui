@@ -102,8 +102,16 @@ The `id` column is a stable, reversible conversion of the OUI as follows: the he
 
 ## Tested Ruby Engines
 
-- JRuby 1.7.*
-- Ruby (MRI) 2.2.*
+- JRuby
+    - 1.7.*
+- Ruby (MRI)
+    - ruby-head
+    - 2.2.0
+    - 2.1.5
+    - 2.0.0
+    - 1.9.3
+    - jruby-19mode
+    - Rubinius (rbx)
 
 ## Thanks
 
