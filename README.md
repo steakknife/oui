@@ -87,6 +87,7 @@ Place custom/unregistered OUIs in `data/oui-manual.json` and re-run `oui update`
  :address2      => "800 PHILLIPS ROAD",
  :address3      => "WEBSTER NY 14580",
  :country       => "UNITED STATES"}
+```
 
 
 The `id` column is a stable, reversible conversion of the OUI as follows: the hexadecimal value of the OUI) to unsigned integer in network order (id).
