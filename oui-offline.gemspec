@@ -1,6 +1,6 @@
 Gem::Specification::new do |s|
   s.name = 'oui-offline'
-  s.version = '1.2.5'
+  s.version = '1.2.6'
   s.summary = 'Organizationally Unique Idenitfiers (OUI)'
   s.description = 'Organizationally Unique Idenitfiers (OUI) offline database'
   s.license = 'MIT'
