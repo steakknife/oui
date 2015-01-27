@@ -115,7 +115,7 @@ The `id` column is a stable, reversible conversion of the OUI as follows: the he
 
 ## Thanks
 
-- ### **Jason Kendall** - Elasticsearch
+### **Jason Kendall** - Elasticsearch
 
 ## License
 
