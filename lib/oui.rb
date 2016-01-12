@@ -25,7 +25,7 @@ module OUI
   FIRST_LINE_INDEX = 7
   EXPECTED_DUPLICATES = [0x0001C8, 0x080030]
   LINE_LENGTH = 22
-  HEX_BEGINNING_REGEX = /\A[[:space:]]{2}[[:xdigit:]]{2}-/
+  HEX_BEGINNING_REGEX = /\A[[:space:]]*[[:xdigit:]]{2}-[[:xdigit:]]{2}-[[:xdigit:]]{2}[[:space:]]*\(hex\)/
   ERASE_LINE = "\b" * LINE_LENGTH
   BLANK_LINE = ' ' * LINE_LENGTH
 
@@ -247,7 +247,15 @@ module OUI
   # @return [Array<Array<String>>]
   def parse_lines_into_groups(lines)
     grps, curgrp = [], []
-    lines[FIRST_LINE_INDEX..-1].each do |line|
+    header = true
+    lines.each do |line|
+      if header
+        if line =~ HEX_BEGINNING_REGEX
+          header = false
+        else
+          next
+        end
+      end
       if !curgrp.empty? && line =~ HEX_BEGINNING_REGEX
         grps << curgrp
         curgrp = []
@@ -291,7 +299,7 @@ module OUI
   # @param g [Array<String>]
   def create_from_line_group(g)
     n = g.length
-    raise ArgumentError, "Parse error lines: #{n}" unless (2..6).include? n
+    raise ArgumentError, "Parse error lines: #{n} '#{g}'" unless (2..6).include? n
     id = parse_id(g)
     create_unless_present(id: id, organization: parse_org(g),
                           address1: parse_address1(g),
