@@ -13,9 +13,9 @@ class TestOUI < Minitest::Test
     @xerox = {id: 0,
     organization: 'XEROX CORPORATION',
         address1: 'M/S 105-50C',
-        address2: '800 PHILLIPS ROAD',
-        address3: 'WEBSTER NY 14580',
-         country: 'UNITED STATES'}
+        address2: 'WEBSTER  NY  14580',
+        address3: nil,
+         country: 'US'}
 
     @dell = {id: 54032,
    organization: 'Dell, Inc., for Dell Compellent Storage products',
@@ -27,9 +27,9 @@ class TestOUI < Minitest::Test
     @vmware = {id: 20566,
      organization: 'VMware, Inc.',
          address1: '3401 Hillview Avenue',
-         address2: 'PALO ALTO CA 94304',
+         address2: 'PALO ALTO  CA  94304',
          address3: nil,
-          country: 'UNITED STATES'}
+          country: 'US'}
   end
 
   def test_update_db
