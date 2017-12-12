@@ -26,7 +26,7 @@ Gem::Specification::new do |s|
   s.homepage = 'https://github.com/steakknife/oui'
   s.post_install_message = 'Oui!'
 
-  s.add_dependency 'sequel', '~> 4'
+  s.add_dependency 'sequel', ['>= 4', '< 6']
   if RUBY_PLATFORM == 'java'
     s.platform = 'java'
     s.add_dependency 'jdbc-sqlite3'
