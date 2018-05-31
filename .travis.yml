@@ -49,7 +49,7 @@ before_install:
   - "travis_retry gem update bundler"
 
 install:
-  - "rm -f \"${BUNDLE_GEMFILE}\".lock; bundle package --no-install --retry=3 && bundle install --deploymemt --local --jobs=5"
+  - "rm -f \"${BUNDLE_GEMFILE}\".lock; bundle package --no-install --retry=3 && bundle install --deployment --local --jobs=5"
 
 script:
   - "bundle exec ruby -Ilib:test ./test/test_oui.rb"
