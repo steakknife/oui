@@ -45,6 +45,10 @@ install:
 script:
   - "bundle exec ruby -Ilib:test ./test/test_oui.rb"
 
+after_script:
+# workaround rvm hanging jobs
+  - "exit ${TRAVIS_TEST_RESULT}"
+
 matrix:
   fast_finish: true
   exclude:
