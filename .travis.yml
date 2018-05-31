@@ -24,7 +24,7 @@ env:
     - JRUBY_OPTS='--debug -J-Xmx1000M'
 
 before_install:
-  - echo 'gem: --no-document --verbose --env-shebang' > ~/.gemrc
+  - "echo 'gem: --no-document --verbose --env-shebang' > ~/.gemrc"
   - rvm @global do gem uninstall bundler -Iax || true
 #  - gem uninstall bundler -Iax || true
 #  - gem install bundler -v '~> 1.11.2'
