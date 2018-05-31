@@ -2,9 +2,9 @@ require 'minitest/autorun'
 
 require 'oui'
 require 'fileutils'
+require 'tempfile'
 
 class TestOUI < Minitest::Test
-
 
   def setup
     @tmp_db_file = Tempfile.new('test_oui')

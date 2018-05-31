@@ -1,29 +1,65 @@
 language: ruby
-
-before_install:
-  - rvm @global do gem uninstall bundler -Iax || true
-  - gem uninstall bundler -Iax || true
-  - gem install bundler -v '~> 1.11.2'
+sudo: false
+cache:
+  directories:
+    - "${BUNDLE_PATH:-vendor/bundle}"
+    - vendor/cache
 
 os:
-- linux
-- osx
+  - linux
+  - osx
 
-rvm: 
-- 2.2.0
-- 2.1.5
-- 2.0.0
-- 1.9.3
-- ruby-head
-- jruby-19mode
-- rbx
+rvm:
+# Ruby (MRI)
+  - ruby-head
+  - ruby-head-clang
+  - 2.5
+  - 2.4
+  - 2.3
+  - 2.2
+  - 2.1
+  - 2.0
+  - 1.9.3
+# JRuby
+  - jruby-head
+  - jruby-9.2
+  - jruby-9.1
+  - jruby-9.0
+# Rubinius
+  - rbx-3
+  - rbx-2
+
+env:
+  global:
+    - "JRUBY_OPTS='--dev -J-Xmx1024M'"
+
+before_install:
+  - "echo 'gem: --no-document --env-shebang' > ~/.gemrc"
+  # https://github.com/travis-ci/travis-ci/issues/6307
+  - "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
+  - rvm get stable
+
+install:
+  - "rm -f \"${BUNDLE_GEMFILE}\".lock; bundle package --no-install --retry=3 && bundle install --deployment --local --jobs=5"
+
+script:
+  - "bundle exec ruby -Ilib:test ./test/test_oui.rb"
+
+after_script:
+# workaround rvm hanging jobs
+  - "exit ${TRAVIS_TEST_RESULT}"
 
 matrix:
   fast_finish: true
   exclude:
+  # travis is missing this
+    - os: osx
+      rvm: 1.9.3
+  allow_failures:
+  # alpha-quality software
     - rvm: ruby-head
-      os: osx
-    - rvm: jruby-19mode
-      os: osx
-    - rvm: rbx
-      os: osx
+    - rvm: ruby-head-clang
+    - rvm: jruby-head
+  # Rubinius isn't well supported on travis
+    - rvm: rbx-3
+    - rvm: rbx-2
