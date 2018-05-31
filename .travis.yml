@@ -26,7 +26,6 @@ rvm:
   - jruby-9.1
   - jruby-9.0
 # Rubinius
-  - rbx-head
   - rbx-3
   - rbx-2
 
@@ -34,7 +33,6 @@ allow_failures:
   - rvm: ruby-head
   - rvm: ruby-head-clang
   - rvm: jruby-head
-  - rvm: rbx-head
   - rvm: rbx-3
   - rvm: rbx-2
 
