@@ -33,18 +33,10 @@ env:
   global:
     - "JRUBY_OPTS='--dev -J-Xmx1024M'"
 
-matrix:
-  allow_failures:
-    - rvm: ruby-head
-    - rvm: ruby-head-clang
-    - rvm: jruby-head
-    - rvm: rbx-3
-    - rvm: rbx-2
-
 before_install:
   - "echo 'gem: --no-document --env-shebang' > ~/.gemrc"
-  - "travis_retry gem update --system"
-  - "travis_retry gem update bundler"
+#  - "travis_retry gem update --system"
+#  - "travis_retry gem update bundler"
 
 install:
   - "rm -f \"${BUNDLE_GEMFILE}\".lock; bundle package --no-install --retry=3 && bundle install --deployment --local --jobs=5"
@@ -54,3 +46,15 @@ script:
 
 matrix:
   fast_finish: true
+  exclude:
+  # travis is missing this
+    - os: osx
+      rvm: 1.9.3
+  allow_failures:
+  # alpha-quality software
+    - rvm: ruby-head
+    - rvm: ruby-head-clang
+    - rvm: jruby-head
+  # Rubinius isn't well supported on travis
+    - rvm: rbx-3
+    - rvm: rbx-2
