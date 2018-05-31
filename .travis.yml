@@ -36,6 +36,7 @@ env:
 before_install:
   - "echo 'gem: --no-document --env-shebang' > ~/.gemrc"
   # https://github.com/travis-ci/travis-ci/issues/6307
+  - "curl -sSL https://rvm.io/mpapis.asc | gpg --import -"
   - rvm get stable
 
 install:
