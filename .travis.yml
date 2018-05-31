@@ -1,6 +1,9 @@
 language: ruby
-cache: bundler
 sudo: false
+cache: bundler
+  directories:
+    - "${BUNDLE_PATH:-vendor/bundle}"
+    - vendor/cache
 
 os:
   - linux
@@ -45,13 +48,11 @@ before_install:
   - "travis_retry gem update --system"
   - "travis_retry gem update bundler"
 
-bundler_args: --deployment --jobs=5
+install:
+  - "rm -f \"${BUNDLE_GEMFILE}\".lock; bundle package --no-install --retry=3 && bundle install --deploymemt --local --jobs=5"
 
 script:
   - "bundle exec ruby -Ilib:test ./test/test_oui.rb"
-
-before_cache:
-  - "rm -f Gemfile.lock"
 
 matrix:
   fast_finish: true
