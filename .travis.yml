@@ -35,8 +35,8 @@ env:
 
 before_install:
   - "echo 'gem: --no-document --env-shebang' > ~/.gemrc"
-#  - "travis_retry gem update --system"
-#  - "travis_retry gem update bundler"
+  # https://github.com/travis-ci/travis-ci/issues/6307
+  - rvm get stable
 
 install:
   - "rm -f \"${BUNDLE_GEMFILE}\".lock; bundle package --no-install --retry=3 && bundle install --deployment --local --jobs=5"
