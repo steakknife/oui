@@ -3,35 +3,55 @@ cache: bundler
 sudo: false
 
 os:
-- linux
-- osx
+  - linux
+  - osx
 
 rvm:
-- 2.5
-- 2.4
-- 2.3
-- 2.2
-- 2.1
-- 2.0
-- 1.9.3
-- ruby-head
-- jruby-9.2
-- jruby-head
-- rbx-3
+# Ruby (MRI)
+  - ruby-head
+  - ruby-head-clang
+  - 2.5
+  - 2.4
+  - 2.3
+  - 2.2
+  - 2.1
+  - 2.0
+  - 1.9.3
+  - 1.9.2
+# JRuby
+  - jruby-head
+  - jruby-9.2
+  - jruby-9.1
+  - jruby-9.0
+# Rubinius
+  - rbx-head
+  - rbx-3
+  - rbx-2
+
+allow_failures:
+  - rvm: ruby-head
+  - rvm: ruby-head-clang
+  - rvm: jruby-head
+  - rvm: rbx-head
+  - rvm: rbx-3
+  - rvm: rbx-2
 
 env:
   global:
-    - JRUBY_OPTS='--debug -J-Xmx1000M'
+    - "JRUBY_OPTS='--dev -J-Xmx1024M'"
 
 before_install:
-  - "echo 'gem: --no-document --verbose --env-shebang' > ~/.gemrc"
-  - rvm @global do gem uninstall bundler -Iax || true
-#  - gem uninstall bundler -Iax || true
-#  - gem install bundler -v '~> 1.11.2'
-  - gem update --system
-  - gem update --remote bundler
-  - bundle config --global jobs 4
-  - bundle config --global retry 4
+  - "echo 'gem: --no-document --env-shebang' > ~/.gemrc"
+  - "travis_retry gem update --system"
+  - "travis_retry gem update bundler"
+
+bundler_args: --deployment --jobs=5
+
+script:
+  - "bundle exec ruby -Ilib:test ./test/test_oui.rb"
+
+before_cache:
+  - "rm -f Gemfile.lock"
 
 matrix:
   fast_finish: true
