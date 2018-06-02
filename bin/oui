@@ -2,10 +2,11 @@
 root = File.dirname(File.expand_path('..', __FILE__))
 lib_dir = File.join(root, 'lib')
 $:.unshift lib_dir unless $:.include? lib_dir
+
 require 'oui'
+
 require 'json'
 require 'yaml'
-
 
 case ARGV.shift
 when 'lookup'
