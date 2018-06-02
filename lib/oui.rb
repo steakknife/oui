@@ -1,5 +1,5 @@
-autoload :FileUtils, 'fileutils'
-autoload :JSON, 'json'
+require 'fileutils'
+require 'json'
 require 'monitor'
 require 'open-uri'
 
@@ -8,8 +8,6 @@ require 'sequel'
 # Organizationally Unique Identifier
 module OUI
   extend self
-
-  private
 
   DEBUGGING_DEFAULT = false
   TABLE = :ouis
@@ -40,8 +38,6 @@ module OUI
     0x002142 => 'SERBIA',
     0x684CA8 => 'CHINA'
   }
-
-  public
 
   @@local_db = LOCAL_DB_DEFAULT
 
