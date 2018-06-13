@@ -52,7 +52,7 @@ end
 
 desc 'get version'
 task :version do
-  puts gemspec_object.version
+  puts version
 end
 
 def bump(idx)
