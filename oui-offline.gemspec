@@ -27,6 +27,7 @@ Gem::Specification::new do |s|
   s.post_install_message = 'Oui!'
 
   s.add_dependency 'sequel', '>= 4', '< 6'
+  s.add_dependency 'open_uri_redirections', '~> 0.2'
   if RUBY_PLATFORM == 'java'
     s.platform = 'java'
     s.add_dependency 'jdbc-sqlite3', '~> 3.8'

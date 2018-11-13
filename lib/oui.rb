@@ -2,6 +2,7 @@ require 'fileutils'
 require 'json'
 require 'monitor'
 require 'open-uri'
+require 'open_uri_redirections'
 
 require 'sequel'
 
@@ -307,7 +308,7 @@ module OUI
   def fetch
     uri = oui_uri
     $stderr.puts "Fetching #{uri}"
-    open(uri).read
+    open(uri, :allow_redirections => :all).read
   end
 
   def install_manual
@@ -325,7 +326,7 @@ module OUI
 
   def install_updates
     debug 'install_updates'
-    lines = fetch.split("\n").map { |x| x.sub(/\r$/, '') } 
+    lines = fetch.force_encoding('UTF-8').split("\n").map { |x| x.sub(/\r$/, '') }
     parse_lines_into_groups(lines).each_with_index do |group, idx|
       create_from_line_group(group)
       debug "#{ERASE_LINE}Created records #{idx}" if idx % 1000 == 0
