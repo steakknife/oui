@@ -39,6 +39,13 @@ class TestOUI < Minitest::Test
     assert_equal true, ::File.exists?(x)
   end
 
+  def test_update_db_online
+    x = @tmp_db_file.path # Ruby 2.2 GC over-aggressive problem likely
+    @tmp_db_file.unlink
+    OUI.update_db(false, x)
+    assert_equal true, ::File.exists?(x)
+  end
+
   def test_lookup
     assert_equal @xerox, OUI.find('000000')
     assert_equal @xerox, OUI.find('000000FFFFFFFFFFFF')
