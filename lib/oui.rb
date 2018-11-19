@@ -26,6 +26,7 @@ module OUI
   HEX_BEGINNING_REGEX = /\A[[:space:]]*[[:xdigit:]]{2}-[[:xdigit:]]{2}-[[:xdigit:]]{2}[[:space:]]*\(hex\)/
   ERASE_LINE = "\b" * LINE_LENGTH
   BLANK_LINE = ' ' * LINE_LENGTH
+  MAX_REDIRECTS = 5
 
   MISSING_COUNTRIES = [
     0x000052,
@@ -306,8 +307,16 @@ module OUI
 
   def fetch
     uri = oui_uri
-    $stderr.puts "Fetching #{uri}"
-    open(uri).read
+    attempt = 1
+    begin
+      $stderr.puts "Fetching #{uri}"
+      open(uri, redirect: false).read
+    rescue OpenURI::HTTPRedirect => redirect
+      # Extract the new URI from the Location header.
+      uri = redirect.uri
+      retry if (attempt += 1) <= MAX_REDIRECTS
+      raise
+    end
   end
 
   def install_manual
